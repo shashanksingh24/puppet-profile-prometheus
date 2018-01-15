@@ -1,0 +1,80 @@
+groups:
+- name: alert.rules
+  rules:
+  - alert: InstanceDown
+    expr: up== 0
+    for: 5m
+    labels:
+      alertname: Instance Down - Critical
+      severity: critical
+    annotations:
+      description: '{{$labels.instance}} has been down for more than 5 minutes'
+      summary: Instance {{$labels.instance}} is down
+  - alert: NodeCPUHigh
+    expr: (100 - (avg(irate(node_cpu{job="node",mode="idle"}[5m])) BY (instance) * 100)) > 60
+    for: 5m
+    labels:
+      alertname: High Node CPU - Warning
+      severity: warning
+    annotations:
+      DESCRIPTION: '{{$labels.instance}}: CPU usage is above 60% (current value is: {{ $value }})'
+      SUMMARY: '{{$labels.instance}}: High CPU usage detected'
+  - alert: NodeCPUVeryHigh
+    expr: (100 - (avg(irate(node_cpu{job="node",mode="idle"}[5m])) BY (instance) * 100)) > 80
+    for: 2m
+    labels:
+      alertname: High Node CPU - Critical
+      severity: critical
+    annotations:
+      DESCRIPTION: '{{$labels.instance}}: CPU usage is above 80% (current value is: {{ $value }})'
+      SUMMARY: '{{$labels.instance}}: High CPU usage detected'
+  - alert: NodeLoadHigh
+    expr: ((node_load5 / count(node_cpu{mode="system"}) WITHOUT (cpu, mode)) > 0.8)
+    for: 5m
+    labels:
+      alertname: High Node Load - Warning
+      severity: warning
+    annotations:
+      DESCRIPTION: '{{$labels.instance}}: Load average is high'
+      SUMMARY: '{{$labels.instance}}: High Load average detected'
+  - alert: NodeLoadVeryHigh
+    expr: ((node_load5 / count(node_cpu{mode="system"}) WITHOUT (cpu, mode)) > 1)
+    for: 2m
+    labels:
+      alertname: High Node Load - Critical
+      severity: critical
+    annotations:
+      DESCRIPTION: '{{$labels.instance}}: Load average is high'
+      SUMMARY: '{{$labels.instance}}: High Load average detected'
+  - alert: NodeRootDiskLow
+    expr: ((node_filesystem_size{mountpoint="/"} - node_filesystem_free{mountpoint="/"}) / node_filesystem_size{mountpoint="/"} * 100) > 70
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      DESCRIPTION: '{{$labels.instance}}: Root disk usage is above 70% (current value is: {{ $value }})'
+      SUMMARY: '{{$labels.instance}}: Low root disk space'
+  - alert: NodeRootDiskVeryLow
+    expr: ((node_filesystem_size{mountpoint="/"} - node_filesystem_free{mountpoint="/"})  / node_filesystem_size{mountpoint="/"} * 100) > 90
+    for: 15m
+    labels:
+      severity: critical
+    annotations:
+      DESCRIPTION: '{{$labels.instance}}: Root disk usage is above 90% (current value  is: {{ $value }})'
+      SUMMARY: '{{$labels.instance}}: Low root disk space'
+  - alert: NodeMemoryUsageHigh
+    expr: (((node_memory_MemTotal - node_memory_MemFree - node_memory_Cached) / (node_memory_MemTotal) * 100)) > 70
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      DESCRIPTION: '{{$labels.instance}}: Memory usage is above 70% (current value  is: {{ $value }})'
+      SUMMARY: '{{$labels.instance}}: High memory usage detected'
+  - alert: NodeMemoryUsageVeryHigh
+    expr: (((node_memory_MemTotal - node_memory_MemFree - node_memory_Cached) / (node_memory_MemTotal) * 100)) > 90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      DESCRIPTION: '{{$labels.instance}}: Memory usage is above 90% (current value  is: {{ $value }})'
+      SUMMARY: '{{$labels.instance}}: High memory usage detected'

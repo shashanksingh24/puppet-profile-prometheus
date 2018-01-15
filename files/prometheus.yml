@@ -1,0 +1,117 @@
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+      monitor: 'monitor'
+alerting:
+  alertmanagers:
+  - scheme: https
+    static_configs:
+    - targets:
+      - "localhost:9093"
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  - "/opt/prometheus-2.0.0.linux-amd64/alerts.yml"
+  # - "first.rules"
+  # - "second.rules"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus-server'
+    scheme: http
+    ec2_sd_configs:
+      - region: eu-west-1
+        refresh_interval: 1m
+        port: 9090
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_puppet_role]
+        regex: prometheus
+        replacement: $1
+        action: keep
+      - source_labels: [__meta_ec2_instance_id]
+        regex: (.*)
+        target_label: instance
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_ec2_availability_zone]
+        separator: ;
+        regex: (.*)
+        target_label: az
+        replacement: $1
+        action: replace
+  - job_name: 'node resources'
+    scheme: http
+    ec2_sd_configs:
+      - region: eu-west-1
+        refresh_interval: 1m
+        port: 9100
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_puppet_role]
+        regex: (.*)
+        replacement: $1
+        action: keep
+      - source_labels: [__meta_ec2_instance_id]
+        separator: ;
+        regex: (.*)
+        target_label: instance
+        replacement: $1
+        action: replace
+  - job_name: 'cloudwatch'
+    scheme: http
+    ec2_sd_configs:
+    - region: eu-west-1
+      refresh_interval: 1m
+      port: 9106
+    relabel_configs:
+    - source_labels: [__meta_ec2_tag_puppet_role]
+      regex: cassandra
+      replacement: $1
+      action: keep
+    - source_labels: [__meta_ec2_instance_id]
+      separator: ;
+      regex: (.*)
+      target_label: instance
+      replacement: $1
+      action: replace
+  - job_name: 'cassandra'
+    scheme: http
+    ec2_sd_configs:
+    - region: eu-west-1
+      refresh_interval: 1m
+      port: 7070
+    relabel_configs:
+    - source_labels: [__meta_ec2_tag_puppet_role]
+      separator: ;
+      regex: cassandra
+      replacement: $1
+      action: keep
+    - source_labels: [__meta_ec2_instance_id]
+      separator: ;
+      regex: (.*)
+      target_label: instance
+      replacement: $1
+      action: replace
+  - job_name: 'kafka'
+    scheme: http
+    ec2_sd_configs:
+    - region: eu-west-1
+      refresh_interval: 1m
+      port: 7071
+    relabel_configs:
+    - source_labels: [__meta_ec2_tag_puppet_role]
+      regex: kafka
+      replacement: $1
+      action: keep
+    - source_labels: [__meta_ec2_instance_id]
+      separator: ;
+      regex: (.*)
+      target_label: instance
+      replacement: $1
+      action: replace

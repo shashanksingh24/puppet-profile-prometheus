@@ -1,0 +1,8 @@
+region: eu-west-1
+metrics:
+ - aws_namespace: AWS/ELB
+   aws_metric_name: RequestCount
+   aws_dimensions: [AvailabilityZone, LoadBalancerName]
+   aws_dimension_select:
+     LoadBalancerName: [staging]
+   aws_statistics: [Sum]
